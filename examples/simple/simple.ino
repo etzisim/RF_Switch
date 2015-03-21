@@ -2,9 +2,9 @@
 
 #define rxPin 7
 
-RF_Switch rfSwitch = RF_Switch();
+RF_Switch rfSwitch;
 int pw;
-String str;
+char str[64];
 
 void setup(){
 	pinMode(rxPin, INPUT);
@@ -14,13 +14,13 @@ void setup(){
 
 void loop(){
 
-	if (pw = highPulse()){
+	if (pw = rfSwitch.highPulse()){
 		sprintf(str, "High: %d micro-seconds");
 		Serial.println(str);
 
 	}
 
-	if (pw = lowPulse()){
+	if (pw = rfSwitch.lowPulse()){
 		sprintf(str, "Low: %d micro-seconds");
 		Serial.println(str);
 	}

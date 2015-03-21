@@ -3,22 +3,16 @@
 
 #include <stdint.h>
 
-#define BUFFERSIZE 100
-
 class RF_Switch{
 
 public:
 	RF_Switch();
-	void start(byte rxPin); /* rxPin: D0-D7 */
-	uint32_t highPulse();
-	uint32_t lowPulse();
+	void start(int rxPin); /* rxPin: D0-D7 */
+	uint16_t highPulse();
+	uint16_t lowPulse();
 private:
-	byte rxPin;
-	int toRead;
-	volatile int toWrite;
-	volatile uint32_t transitionTimes[BUFFERSIZE];
-	volatile bool nextPulseHigh;
-	volatile bool hasBuffered;
+	bool nextPulseHigh;
+	bool hasBuffered();
 };
 
 #endif
