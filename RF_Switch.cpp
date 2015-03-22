@@ -1,46 +1,38 @@
 #include <RF_Switch.h>
+#include <assert.h>
 #include <Arduino.h>
-#include <pins_arduino.h>
 
-/* Ring-buffer */
-#define BUFFERSIZE 100
-#define next(i) ((i++) % BUFFERSIZE)
-#define prev(i) ((i--) % BUFFERSIZE)
+/* Circular buffer filled by interrupt routine, emptied by main loop. */
+#define BUFFERSIZE 200
+#define next(i) ((i+1) % BUFFERSIZE)
+#define prev(i) ((i-1) % BUFFERSIZE)
 
+volatile uint32_t transitionTimes[BUFFERSIZE] = {0};
+volatile int toWrite;
+int toRead;
 
-static volatile uint32_t transitionTimes[BUFFERSIZE];
-static volatile int toWrite;
-static int toRead;
+void clockTransition(){
 
-RF_Switch::RF_Switch(){
-	nextPulseHigh = true;
-}
-
-void RF_Switch::start(int pin){
-
-	/* Pin change interrupt setup */
-	*digitalPinToPCMSK(pin) |= bit (digitalPinToPCMSKbit(pin));
-	PCIFR  |= bit (digitalPinToPCICRbit(pin));
-	PCICR  |= bit (digitalPinToPCICRbit(pin));
-
-	toWrite = -1;
-	toRead = -1;
-
-	nextPulseHigh = true;
-}
-
-/* Pin change interrupt vector, D0-D7 */
-ISR (PCINT2_vect){
-	int nextToWrite = next(toWrite);
-
-	if (nextToWrite != toRead || toRead == -1){
-		transitionTimes[nextToWrite] = micros();
-
+	if (toWrite != toRead){
+		transitionTimes[toWrite] = micros();
+		toWrite = next(toWrite);
 	}else{
 		/* Buffer overflow */
-		exit(1);
 	}
-}  
+}
+
+RF_Switch::RF_Switch(int rxPin){
+	assert(rxPin == 3 || rxPin == 2);
+
+	attachInterrupt(rxPin-2, clockTransition, CHANGE);
+
+	toWrite = 0;
+	toRead = 0;
+	transitionTimes[toWrite] = micros();
+	toWrite = next(toWrite);
+
+	nextPulseHigh = true;
+}
 
 uint16_t RF_Switch::highPulse(){
 	if (!hasBuffered() || !nextPulseHigh){
@@ -48,7 +40,7 @@ uint16_t RF_Switch::highPulse(){
 	}
 
 	toRead = next(toRead);
-	
+
 	nextPulseHigh = false;
 	return transitionTimes[toRead]-transitionTimes[prev(toRead)];
 
@@ -66,13 +58,11 @@ uint16_t RF_Switch::lowPulse(){
 }
 
 bool RF_Switch::hasBuffered(){
-	if (toRead == -1){
-		if (toWrite > 0){
-			return true;
-		}
-	}else if (toRead != toWrite){
-		return  true;
+	if (next(toRead) < toWrite){
+		return true;
 	}
-	
+	if (toWrite < toRead && !(toWrite == 0 && toRead == BUFFERSIZE-1)){
+		return true;
+	}
 	return false;
 }
