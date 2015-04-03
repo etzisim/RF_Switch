@@ -61,7 +61,7 @@ bool RF_Switch::hasBuffered(){
 	if (next(toRead) < toWrite){
 		return true;
 	}
-	if (toWrite < toRead){
+	if (toWrite < toRead && !(toWrite == 0 && toRead == BUFFERSIZE-1)){
 		return true;
 	}
 	return false;
