@@ -2,23 +2,23 @@
 #include <assert.h>
 #include <Arduino.h>
 
-/* Circular buffer filled by interrupt routine, emptied by main loop. */
 #define BUFFERSIZE 200
 #define next(i) ((i+1) % BUFFERSIZE)
 #define prev(i) ((i-1) % BUFFERSIZE)
 
 volatile uint32_t transitionTimes[BUFFERSIZE] = {0};
+volatile int buffered;
 volatile int toWrite;
 int toRead;
 
 void clockTransition(){
-
-	if (toWrite != toRead){
-		transitionTimes[toWrite] = micros();
-		toWrite = next(toWrite);
-	}else{
-		/* Buffer overflow */
+	if (buffered > 0 && toWrite == toRead){
+		return;
 	}
+
+	transitionTimes[toWrite] = micros();
+	toWrite = next(toWrite);
+	buffered++;
 }
 
 RF_Switch::RF_Switch(int rxPin){
@@ -28,18 +28,18 @@ RF_Switch::RF_Switch(int rxPin){
 
 	toWrite = 0;
 	toRead = 0;
-	transitionTimes[toWrite] = micros();
-	toWrite = next(toWrite);
+	buffered = -1;
 
 	nextPulseHigh = true;
 }
 
 uint16_t RF_Switch::highPulse(){
-	if (!hasBuffered() || !nextPulseHigh){
+	if (buffered > 0 || !nextPulseHigh){
 		return 0;
 	}
 
 	toRead = next(toRead);
+	buffered--;
 
 	nextPulseHigh = false;
 	return transitionTimes[toRead]-transitionTimes[prev(toRead)];
@@ -47,22 +47,14 @@ uint16_t RF_Switch::highPulse(){
 }
 
 uint16_t RF_Switch::lowPulse(){
-	if (!hasBuffered() || nextPulseHigh){
+	if (buffered > 0 || nextPulseHigh){
 		return 0;
 	}
 
 	toRead = next(toRead);
+	buffered--;
 
 	nextPulseHigh = true;
 	return transitionTimes[toRead]-transitionTimes[prev(toRead)];
 }
 
-bool RF_Switch::hasBuffered(){
-	if (next(toRead) < toWrite){
-		return true;
-	}
-	if (toWrite < toRead && !(toWrite == 0 && toRead == BUFFERSIZE-1)){
-		return true;
-	}
-	return false;
-}

@@ -11,7 +11,6 @@ public:
 	uint16_t lowPulse();
 private:
 	bool nextPulseHigh;
-	bool hasBuffered();
 };
 
 #endif
