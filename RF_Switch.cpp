@@ -39,24 +39,14 @@ RF_Switch::RF_Switch(int rxPin){
 	nextPulseHigh = true;
 }
 
-uint16_t RF_Switch::highPulse(){
-	if (buffered < 1 || !nextPulseHigh){return 0;}
+uint16_t RF_Switch::pulse(bool *high){
+	if (buffered < 1){return 0;}
+
+	*high = nextPulseHigh;
+	nextPulseHigh = !nextPulseHigh;
 
 	toRead = next(toRead);
 	buffered--;
 
-	nextPulseHigh = false;
-	return transitionTimes[toRead]-transitionTimes[prev(toRead)];
-
-}
-
-uint16_t RF_Switch::lowPulse(){
-	if (buffered < 1 || nextPulseHigh){return 0;}
-
-	toRead = next(toRead);
-	buffered--;
-
-	nextPulseHigh = true;
 	return transitionTimes[toRead]-transitionTimes[prev(toRead)];
 }
-
