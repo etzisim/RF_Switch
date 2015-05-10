@@ -4,7 +4,7 @@
 
 #define BUFFERSIZE 200
 #define next(i) ((i+1) % BUFFERSIZE)
-#define prev(i) ((i-1) % BUFFERSIZE)
+#define prev(i) ((BUFFERSIZE+i-1) % BUFFERSIZE)
 
 volatile uint32_t transitionTimes[BUFFERSIZE] = {0};
 volatile int buffered;
