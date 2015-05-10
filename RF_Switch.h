@@ -8,8 +8,6 @@ class RF_Switch{
 public:
 	RF_Switch(int rxPin); /* input pin 2 or 3 */
 	uint16_t pulse(bool *high);
-private:
-	bool nextPulseHigh;
 };
 
 #endif
