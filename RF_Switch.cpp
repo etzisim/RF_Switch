@@ -25,9 +25,10 @@ void clockTransition(){
 }
 
 RF_Switch::RF_Switch(int rxPin){
-	assert(rxPin == 3 || rxPin == 2);
+	//assert(rxPin == 3 || rxPin == 2);
 
-	attachInterrupt(rxPin-2, clockTransition, CHANGE);
+	//attachInterrupt(rxPin-2, clockTransition, CHANGE);
+	attachInterrupt(rxPin, clockTransition, CHANGE);
 	pin = rxPin;
 
 	toWrite = 0;
