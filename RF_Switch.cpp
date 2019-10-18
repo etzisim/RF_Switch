@@ -27,7 +27,9 @@ RF_Switch::RF_Switch(int rxPin){
 	//assert(rxPin == 3 || rxPin == 2);
 
 	//attachInterrupt(rxPin-2, clockTransition, CHANGE);
-	attachInterrupt(rxPin, clockTransition, CHANGE);
+	//attachInterrupt(rxPin, clockTransition, CHANGE);
+	pinMode(rxPin, INPUT_PULLUP);
+        attachInterrupt(digitalPinToInterrupt(rxPin), clockTransition, CHANGE);
 	pin = rxPin;
 
 	toWrite = 0;
