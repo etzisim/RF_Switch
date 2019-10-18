@@ -1,5 +1,4 @@
 #include <RF_Switch.h>
-#include <assert.h>
 #include <Arduino.h>
 
 #define BUFFERSIZE 100
